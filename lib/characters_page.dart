@@ -1,12 +1,26 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:harry_potter/house_badge.dart';
 import 'package:harry_potter/view_character.dart';
+import 'package:http/http.dart' as http;
 
-class HomePageList extends StatelessWidget {
-  final List characters;
-  HomePageList({super.key, required this.characters});
+class CharactersPage extends StatefulWidget {
+  const CharactersPage({super.key});
+  @override
+  State<CharactersPage> createState() => _CharactersPageState();
+}
+
+class _CharactersPageState extends State<CharactersPage> {
+  List characters = [];
+
   final ScrollController _scrollController = ScrollController();
+  @override
+  void initState() {
+    super.initState();
+    fetchCharacterData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -33,7 +47,12 @@ class HomePageList extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => ViewCharacter(character: character),
+                  builder:
+                      (_) => ViewCharacter(
+                        character: character,
+                        characters: characters,
+                        heroTag: index,
+                      ),
                 ),
               );
             },
@@ -50,11 +69,14 @@ class HomePageList extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    CachedNetworkImage(
-                      imageUrl: image,
-                      height: 80,
-                      width: 60,
-                      fit: BoxFit.cover,
+                    Hero(
+                      tag: index,
+                      child: CachedNetworkImage(
+                        imageUrl: image,
+                        height: 80,
+                        width: 60,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -89,5 +111,15 @@ class HomePageList extends StatelessWidget {
         },
       ),
     );
+  }
+
+  void fetchCharacterData() async {
+    var url = Uri.https('hp-api.onrender.com', '/api/characters');
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      setState(() {
+        characters = jsonDecode(response.body);
+      });
+    }
   }
 }

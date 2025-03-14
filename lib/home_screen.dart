@@ -1,9 +1,10 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:harry_potter/characters_page.dart';
 import 'package:harry_potter/home_page_app_bar.dart';
-import 'package:harry_potter/home_page_list.dart';
 import 'package:harry_potter/home_page_search.dart';
-import 'package:http/http.dart' as http;
+import 'package:harry_potter/spells_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,17 +14,35 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List characters = [];
-
-  @override
-  void initState() {
-    super.initState();
-    fetchCharacterData();
-  }
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: Container(
+        color: Colors.black,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+          child: GNav(
+            gap: 12,
+            backgroundColor: Colors.black,
+            color: Colors.white,
+            activeColor: Colors.white,
+            tabBackgroundColor: Colors.lightGreen,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            padding: EdgeInsets.all(16),
+            onTabChange: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            tabs: [
+              GButton(icon: FontAwesomeIcons.hatWizard, text: "Characters"),
+              GButton(icon: FontAwesomeIcons.wandMagicSparkles, text: "Spells"),
+            ],
+          ),
+        ),
+      ),
       body: Stack(
         children: [
           // Background Image
@@ -37,23 +56,12 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 HomePageAppBar(),
                 HomePageSearch(),
-                HomePageList(characters: characters),
+                _selectedIndex == 0 ? CharactersPage() : SpellsPage(),
               ],
             ),
           ),
         ],
       ),
     );
-  }
-
-  void fetchCharacterData() async {
-    var url = Uri.https('hp-api.onrender.com', '/api/characters');
-    var response = await http.get(url);
-    if (response.statusCode == 200) {
-      setState(() {
-        characters = jsonDecode(response.body);
-      });
-      print(response.body);
-    }
   }
 }
